@@ -1,0 +1,29 @@
+{
+  "presets": [
+    [
+      "@babel/env",
+      {
+        "targets": {
+          "browsers": ["last 1 Chrome versions", "last 1 Firefox versions"]
+        },
+        "loose": false,
+        "spec": false,
+        "modules": "auto",
+        "debug": true,
+        "useBuiltIns": false,
+        "forceAllTransforms": false
+      }
+    ]
+  ],
+  "plugins": [
+    ["@babel/plugin-proposal-object-rest-spread", {"loose": true, "useBuiltIns": true }],
+    // transpile decorators
+    ["@babel/plugin-proposal-decorators", { "legacy": true }],
+    // transpile static prop in class declaration (using Object.defineProperty)
+    ["@babel/plugin-proposal-class-properties", {"loose" : false }],
+    // use async import syntax
+    "@babel/plugin-syntax-dynamic-import",
+    // inject babel utils as dependency - required to transform async/await
+    ["@babel/plugin-transform-runtime", {"corejs": false, "helpers": true, "regenerator": true, "useESModules": true}]
+  ]
+}
