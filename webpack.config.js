@@ -2,6 +2,7 @@ const path = require('path');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const autoprefixer = require('autoprefixer');
 
 const srcDir = 'src';
 const distDir = 'dist';
@@ -29,7 +30,7 @@ module.exports = {
     output: {
         path: path.resolve(distDir, wwwDir),
         filename: '[name]-[hash].js',
-        publicPath: '/'
+        publicPath: ''
     },
     target: 'web',
     plugins: [
@@ -47,6 +48,9 @@ module.exports = {
             minify: false,
             cache: true,
             showErrors: true
+        }),
+        new MiniCssExtractPlugin({
+            filename: "[name]-[hash].css",
         })
     ],
     module: {
@@ -69,7 +73,10 @@ module.exports = {
                     {
                         loader: 'postcss-loader',
                         options: {
-                            sourceMap: false
+                            sourceMap: false,
+                            plugins: [
+                                autoprefixer()
+                            ]
                         }
                     }
                 ]
@@ -88,6 +95,34 @@ module.exports = {
                         }
                     },
                     'less-loader'
+                ]
+            },
+            {
+                // fonts dependencies
+                test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
+                use: [
+                    {
+                        loader: 'file-loader',
+                        options: {
+                            name: '[name].[ext]',
+                            outputPath: 'fonts/',
+                            publicPath: 'fonts/'
+                        }
+                    }
+                ]
+            },
+            {
+                // inject images as url
+                test: /\.(jpg|png|gif)$/,
+                use: [
+                    {
+                        loader: 'file-loader',
+                        options: {
+                            name: '[name]-[hash].[ext]',
+                            outputPath: 'images/',
+                            publicPath: 'images/'
+                        }
+                    }
                 ]
             }
         ]

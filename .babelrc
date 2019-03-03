@@ -3,9 +3,6 @@
     [
       "@babel/env",
       {
-        "targets": {
-          "browsers": ["last 1 Chrome versions", "last 1 Firefox versions"]
-        },
         "loose": false,
         "spec": false,
         "modules": "auto",
