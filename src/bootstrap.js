@@ -10,7 +10,7 @@ import 'leaflet/dist/leaflet.css';
 const loadEvent = 'DOMContentLoaded';
 
 function bootstrap(e) {
-    window.demoAudioApp = new App();
+    window.demoAudioApp = App;
     document.removeEventListener(loadEvent, bootstrap);
 }
 
