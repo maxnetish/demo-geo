@@ -9,15 +9,17 @@
         "debug": true,
         "useBuiltIns": false,
         "forceAllTransforms": false
-      }
+      },
+      "@babel/preset-react"
     ]
   ],
   "plugins": [
+    ["@babel/plugin-transform-react-jsx", { "pragma":"h" }],
     ["@babel/plugin-proposal-object-rest-spread", {"loose": true, "useBuiltIns": true }],
     // transpile decorators
     ["@babel/plugin-proposal-decorators", { "legacy": true }],
     // transpile static prop in class declaration (using Object.defineProperty)
-    ["@babel/plugin-proposal-class-properties", {"loose" : false }],
+    ["@babel/plugin-proposal-class-properties", {"loose" : true }],
     // use async import syntax
     "@babel/plugin-syntax-dynamic-import",
     // inject babel utils as dependency - required to transform async/await

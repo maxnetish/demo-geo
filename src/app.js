@@ -1,9 +1,41 @@
-import L from 'leaflet';
-import 'leaflet-providers';
+import {h, Component} from 'preact';
+
+import SelectTileProvider from './components/select-tile-provider/select-tile-provider';
+
+// import L from 'leaflet';
+// import 'leaflet-providers';
 
 console.info('App instantiates');
 
+export default class App extends Component {
+
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            provider: 'OpenStreetMap.Mapnik'
+        }
+    }
+
+    onSelectProvider = ({providerCode}) => {
+        this.setState({provider: providerCode});
+    };
+
+    render(props, {provider}) {
+        return <div class="pure-g">
+            <div class="pure-u-1 pure-u-md-1-4">
+                <SelectTileProvider onChange={this.onSelectProvider} provider={provider}/>
+            </div>
+            <div class="pure-u-1 pure-u-md-3-4">
+                Right pane
+            </div>
+        </div>
+    }
+}
+
 // Saratov
+
+/*
 const defaultCoords = {
     lat: 51.53288217644661,
     lng: 46.01614952087403
@@ -56,6 +88,7 @@ export default {
     map,
     tileLayer
 };
+*/
 
 /*
 export default {
