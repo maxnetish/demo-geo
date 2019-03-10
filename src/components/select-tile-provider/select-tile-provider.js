@@ -2,33 +2,27 @@ import {h, Component} from 'preact';
 import L from 'leaflet';
 import 'leaflet-providers';
 
-function mapProviders(providers) {
-    const tileProvidersToDisplay = [];
-    for (let providerKey in providers) {
-        let providerInfo = providers[providerKey];
-        if (providerInfo.variants) {
-            for (let variantKey in providerInfo.variants) {
-                tileProvidersToDisplay.push(`${providerKey}.${variantKey}`);
-            }
-        } else {
-            tileProvidersToDisplay.push(providerKey);
-        }
-    }
-    return tileProvidersToDisplay;
-}
-
-function findProviderInfo({providerCode = null, providers = {}} = {}) {
-    if (!providerCode) {
-        return null;
+function findProviderInfo({code = null, providers = {}} = {}) {
+    if (!code) {
+        return {
+            provider: null,
+            variant: null
+        };
     }
 
-    const [providerKey, variantKey] = providerCode.split('.');
+    const [providerKey, variantKey] = code.split('.');
 
     if (variantKey) {
-        return providers[providerKey].variants[variantKey];
+        return {
+            provider: providers[providerKey],
+            variant: providers[providerKey].variants[variantKey]
+        };
     }
 
-    return providers[providerKey];
+    return {
+        provider: providers[providerKey],
+        variant: null
+    };
 }
 
 export default class SelectTileProvider extends Component {
@@ -36,21 +30,19 @@ export default class SelectTileProvider extends Component {
         super(props);
 
         this.state = {
-            tileProviders: mapProviders(L.TileLayer.Provider.providers)
+            tileProviders: L.TileLayer.Provider.providers
         }
     }
 
-    emitSelectionChange = providerCode => {
+    emitSelectionChange = code => {
         if (this.props.onChange) {
-            this.props.onChange({
-                providerCode: providerCode || null
-            });
+            this.props.onChange({code});
         }
     };
 
     onSelectionChange = (e) => {
-        let selectedProviderCode = e.target.value;
-        this.emitSelectionChange(selectedProviderCode)
+        const selectedProviderCode = e.target.value;
+        this.emitSelectionChange(selectedProviderCode);
     };
 
     render({provider}, {tileProviders}, ctx) {
@@ -62,10 +54,25 @@ export default class SelectTileProvider extends Component {
                             class="pure-input-1" value={provider}
                             onChange={this.onSelectionChange}>
                         <option value="">-- Select provider of map tiles --</option>
-                        {tileProviders.map(oneProvider => <option value={oneProvider}>{oneProvider}</option>)}
+                        {
+                            Object.keys(tileProviders).map(oneProviderKey => {
+                                if (tileProviders[oneProviderKey].variants) {
+                                    return <optgroup label={oneProviderKey}>
+                                        {
+                                            Object.keys(tileProviders[oneProviderKey].variants).map(oneVariantKey => {
+                                                return <option
+                                                    value={`${oneProviderKey}.${oneVariantKey}`}
+                                                >
+                                                    {oneVariantKey}
+                                                </option>;
+                                            })
+                                        }
+                                    </optgroup>;
+                                }
+                                return <option value={oneProviderKey}>{oneProviderKey}</option>;
+                            })
+                        }
                     </select>
-                    <legend>Selected provider</legend>
-
                 </fieldset>
             </form>
         </div>;
