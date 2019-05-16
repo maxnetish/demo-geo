@@ -25,7 +25,7 @@ module.exports = {
         assets: true
     },
     entry: {
-        'demo-geo': path.resolve(srcDir, 'bootstrap.js')
+        'demo-geo': path.resolve(srcDir, 'bootstrap.tsx')
     },
     output: {
         path: path.resolve(distDir, wwwDir),
@@ -33,6 +33,9 @@ module.exports = {
         publicPath: ''
     },
     target: 'web',
+    resolve: {
+        extensions: ['.js', '.ts', '.tsx']
+    },
     plugins: [
         new CleanWebpackPlugin([
             // clear dist/www
@@ -55,6 +58,11 @@ module.exports = {
     ],
     module: {
         rules: [
+            {
+                test: /\.tsx?$/,
+                exclude: /node_modules/,
+                loaders: ['ts-loader']
+            },
             {
                 test: filesJs,
                 include: path.resolve(srcDir),
