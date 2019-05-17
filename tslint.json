@@ -6,7 +6,8 @@
     "jsRules": {},
     "rules": {
         "quotemark": ["single", "jsx-double"],
-        "ordered-imports": false
+        "ordered-imports": false,
+        "max-classes-per-file": [true, 10]
     },
     "rulesDirectory": []
 }

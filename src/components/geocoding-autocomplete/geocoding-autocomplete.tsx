@@ -1,6 +1,8 @@
 import {h, Component, ComponentChild} from 'preact';
 import {autobind} from 'core-decorators';
 
+import {fetchSuggestions, IHereSuggestion} from "../../services/here-resources";
+
 interface IGeocodingAutocompleteProps {
     onSelectItem?: (selection: any) => void;
 }
@@ -8,18 +10,6 @@ interface IGeocodingAutocompleteProps {
 interface IGeocodingAutocompleteState {
     suggestions: IHereSuggestion[];
     searchTerm?: string;
-}
-
-interface IHereSuggestion {
-    label?: string;
-    language?: string;
-    countryCode?: string;
-    locationId?: string;
-    address?: {
-        [key: string]: string;
-    };
-    distance?: number;
-    matchLevel?: string;
 }
 
 export default class GeocodingAutocomplete extends Component<IGeocodingAutocompleteProps, IGeocodingAutocompleteState> {
@@ -63,16 +53,13 @@ export default class GeocodingAutocomplete extends Component<IGeocodingAutocompl
         this.setState({searchTerm});
 
         if (searchTerm.length > 5) {
-            fetch(`https://autocomplete.geocoder.api.here.com/6.2/suggest.json?app_id=${appId}&app_code=${appCode}&query=${searchTerm}&beginHighlight=<b>&endHighlight=</b>`, {
-                cache: 'default',
-                credentials: 'same-origin',
-                method: 'GET',
-                mode: 'cors',
+            fetchSuggestions({
+                maxresults: 10,
+                query: searchTerm,
             })
-                .then((res) => res.json())
-                .then((d) => {
+                .then((ss) => {
                     this.setState({
-                        suggestions: d.suggestions,
+                        suggestions: ss,
                     });
                 });
         }
