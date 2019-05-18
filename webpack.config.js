@@ -96,12 +96,12 @@ module.exports = {
                         loader: MiniCssExtractPlugin.loader
                     },
                     'css-loader',
-                    {
-                        loader: 'postcss-loader',
-                        options: {
-                            sourceMap: false
-                        }
-                    },
+                    // {
+                    //     loader: 'postcss-loader',
+                    //     options: {
+                    //         sourceMap: false
+                    //     }
+                    // },
                     'less-loader'
                 ]
             },
