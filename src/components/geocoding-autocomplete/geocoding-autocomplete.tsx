@@ -48,21 +48,24 @@ export default class GeocodingAutocomplete extends Component<IGeocodingAutocompl
     }
 
     @autobind
-    private onSearchTermChange(e: Event): void {
+    private async onSearchTermChange(e: Event): Promise<number> {
         const searchTerm = (e.target as HTMLInputElement).value;
         this.setState({searchTerm});
 
-        if (searchTerm.length > 5) {
-            fetchSuggestions({
-                maxresults: 10,
-                query: searchTerm,
-            })
-                .then((ss) => {
-                    this.setState({
-                        suggestions: ss,
-                    });
-                });
+        if(searchTerm.length < 5) {
+            return 0;
         }
+
+        const suggestions = await fetchSuggestions({
+            maxresults: 10,
+            query: searchTerm,
+        });
+
+        this.setState({
+            suggestions
+        });
+
+        return suggestions.length;
     }
 
 }
