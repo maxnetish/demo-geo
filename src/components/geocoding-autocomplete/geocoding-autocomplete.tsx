@@ -6,7 +6,7 @@ import classNames from 'classnames';
 
 import './geocoding-autocomplete.less';
 
-import {fetchSuggestions, IHereSuggestion} from "../../services/here-resources";
+import {fetchSuggestions, IHereSuggestion, fetchGeocodeDetails} from "../../services/here-resources";
 import AutocompleteComponent from '../autocomplete/autocomplete';
 
 interface IGeocodingAutocompleteProps {
@@ -17,6 +17,7 @@ interface IGeocodingAutocompleteState {
     suggestions: IHereSuggestion[];
     searchTerm?: string;
     suggestionsLoading: boolean;
+    selectedSuggestion: IHereSuggestion | null;
 }
 
 export default class GeocodingAutocomplete extends Component<IGeocodingAutocompleteProps, IGeocodingAutocompleteState> {
@@ -42,8 +43,25 @@ export default class GeocodingAutocomplete extends Component<IGeocodingAutocompl
         maxWait: 10000
     });
 
+    private updateSelectedPlace(locationId: string) {
+        fetchGeocodeDetails({locationId})
+            .then((response: any) => {
+                console.log(response);
+            })
+    }
+
+    @autobind
+    private onSelectSuggestion(suggestion: IHereSuggestion) {
+        this.setState({
+            selectedSuggestion: suggestion
+        });
+        if (suggestion && suggestion.locationId) {
+            this.updateSelectedPlace(suggestion.locationId);
+        }
+    }
+
     private static iconByMatchLevel(matchLevel?: string) {
-        if(!matchLevel) {
+        if (!matchLevel) {
             return '';
         }
         return classNames({
@@ -73,6 +91,7 @@ export default class GeocodingAutocomplete extends Component<IGeocodingAutocompl
             searchTerm: '',
             suggestions: [],
             suggestionsLoading: false,
+            selectedSuggestion: null,
         };
     }
 
@@ -90,6 +109,7 @@ export default class GeocodingAutocomplete extends Component<IGeocodingAutocompl
                                            onInput={this.onSearchTermChange} suggestions={state.suggestions}
                                            suggestionComponent={GeocodingAutocomplete.renderSuggestion}
                                            loading={state.suggestionsLoading}
+                                           onSelectSuggestion={this.onSelectSuggestion}
                                            placeholder="Enter 2 or more letters to search place"/>
                 </fieldset>
             </form>

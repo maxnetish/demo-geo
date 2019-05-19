@@ -107,6 +107,71 @@ export interface IHereSuggestionRequest {
     resultType?: HereResultType;
 }
 
+export interface IHereGeocodeResponse {
+    MetaInfo: IHereSearchResponseMetaInfo;
+    View: IHereSearchResultsView[];
+}
+
+export interface IHereSearchResultsView {
+    ViewId: number;
+    PerformedSearch?: object;
+    Result?: IHereSearchResult[];
+}
+
+export interface IHereSearchResult {
+    Relevance?: number;
+    Distance?: number;
+    Direction?: number;
+    MatchLevel?: 'country' | 'state' | 'county' | 'city' | 'district' | 'street' | 'intersection' | 'houseNumber' | 'postalCode' | 'landmark';
+    MatchQuality?: IHereLocationMatchQuality;
+    MatchType?: 'pointAddress' | 'interpolated';
+    MatchCode?: 'exact' | 'ambiguous' | 'upHierarchy' | 'ambiguousUpHierarchy';
+    ParsedRequest?: IHereParsedRequest;
+}
+
+export interface IHereParsedRequest {
+    Name?: string;
+    Label?: string;
+    Country?: string;
+    State?: string;
+    County?: string;
+    City?: string;
+    District?: string;
+    Subdistrict?: string;
+    Street?: string;
+    HouseNumber?: string;
+    PostalCode?: string;
+    Building?: string;
+    AddressLine?: string;
+    AdditionalData?: IHereKeyValuePair[]
+}
+
+export interface IHereLocationMatchQuality {
+    Country?: number;
+    State?: number;
+    County?: number;
+    City?: number;
+    District?: number;
+    Subdistrict?: number;
+    Street?: number;
+    HouseNumber?: number;
+    PostalCode?: number;
+    Building?: number;
+}
+
+export interface IHereSearchResponseMetaInfo {
+    RequestId?: string;
+    Timestamp: string;
+    NextPageInformation?: string;
+    PreviousPageInformation?: string;
+    AdditionalData?: IHereKeyValuePair[];
+}
+
+export interface IHereKeyValuePair {
+    key: string;
+    value: string;
+}
+
 function serializeToQuery<T>(req: T): string {
     const resultAsArray: string[] = [];
 
@@ -163,4 +228,13 @@ export function fetchSuggestions(request: IHereSuggestionRequest): Promise<IHere
     })
         .then((res) => res.json())
         .then((d) => d.suggestions);
+}
+
+export function fetchGeocodeDetails(request: { locationId: string }): Promise<any> {
+    const query = `locationid=${request.locationId}`;
+    return fetch(`/geocoder.api.here.com/6.2/geocode.json?${query}`, {
+        cache: "default",
+        method: 'GET'
+    })
+        .then((res) => res.json());
 }
