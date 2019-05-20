@@ -6,11 +6,16 @@ import classNames from 'classnames';
 
 import './geocoding-autocomplete.less';
 
-import {fetchSuggestions, IHereSuggestion, fetchGeocodeDetails} from "../../services/here-resources";
+import {
+    fetchSuggestions,
+    IHereSuggestion,
+    fetchGeocodeDetails,
+    IHereGeocodeResponse, IHereSearchResult,
+} from "../../services/here-resources";
 import AutocompleteComponent from '../autocomplete/autocomplete';
 
 interface IGeocodingAutocompleteProps {
-    onSelectItem?: (selection: any) => void;
+    onSelectItem?: (selection: IHereSearchResult) => void;
 }
 
 interface IGeocodingAutocompleteState {
@@ -18,47 +23,11 @@ interface IGeocodingAutocompleteState {
     searchTerm?: string;
     suggestionsLoading: boolean;
     selectedSuggestion: IHereSuggestion | null;
+    selectedPlaceLoading: boolean;
+    selectedPlace: IHereSearchResult | null;
 }
 
 export default class GeocodingAutocomplete extends Component<IGeocodingAutocompleteProps, IGeocodingAutocompleteState> {
-
-    private updateSuggestionsDebounced = debounce(async function (term: string, self: Component): Promise<boolean> {
-        self.setState({
-            suggestionsLoading: true
-        });
-        let suggestions = await fetchSuggestions({
-            maxresults: 10,
-            query: term,
-            beginHighlight: '<b>',
-            endHighlight: '</b>',
-        });
-        self.setState({
-            suggestions,
-            suggestionsLoading: false,
-        });
-        return true;
-    }, 500, {
-        leading: false,
-        trailing: true,
-        maxWait: 10000
-    });
-
-    private updateSelectedPlace(locationId: string) {
-        fetchGeocodeDetails({locationId})
-            .then((response: any) => {
-                console.log(response);
-            })
-    }
-
-    @autobind
-    private onSelectSuggestion(suggestion: IHereSuggestion) {
-        this.setState({
-            selectedSuggestion: suggestion
-        });
-        if (suggestion && suggestion.locationId) {
-            this.updateSelectedPlace(suggestion.locationId);
-        }
-    }
 
     private static iconByMatchLevel(matchLevel?: string) {
         if (!matchLevel) {
@@ -69,7 +38,10 @@ export default class GeocodingAutocomplete extends Component<IGeocodingAutocompl
             'fas fa-route': matchLevel === 'intersection',
             'fas fa-road': matchLevel === 'street',
             'fas fa-mail-bulk': matchLevel === 'postalCode',
-            'fas fa-location-arrow': matchLevel === 'district' || matchLevel === 'county' || matchLevel === 'state' || matchLevel === 'country',
+            'fas fa-location-arrow': matchLevel === 'district' ||
+                matchLevel === 'county' ||
+                matchLevel === 'state' ||
+                matchLevel === 'country',
             'fas fa-city': matchLevel === 'city',
         });
     }
@@ -84,6 +56,49 @@ export default class GeocodingAutocomplete extends Component<IGeocodingAutocompl
         </div>;
     }
 
+    private fetchSuggestionsAbortController: AbortController | null = null;
+    private fetchPlaceAbortController: AbortController | null = null;
+
+    private updateSuggestionsDebounced = debounce(async (term: string): Promise<boolean> => {
+        if (this.fetchSuggestionsAbortController) {
+            this.fetchSuggestionsAbortController.abort();
+        }
+        try {
+            this.setState({
+                suggestionsLoading: true,
+            });
+            const promiseWithAborter = fetchSuggestions({
+                maxresults: 10,
+                query: term,
+                beginHighlight: '<b>',
+                endHighlight: '</b>',
+            });
+            this.fetchSuggestionsAbortController = promiseWithAborter.abortController;
+
+            const suggestions = await promiseWithAborter.promise;
+            // AbortController not needed anymore after request resolves
+            this.fetchSuggestionsAbortController = null;
+            this.setState({
+                suggestions,
+                suggestionsLoading: false,
+            });
+            return true;
+        } catch (err) {
+            this.setState({
+                suggestionsLoading: false,
+            });
+            if (err instanceof DOMException && (err as DOMException).code === DOMException.ABORT_ERR) {
+                // request canceled with AbortController
+                return false;
+            }
+            throw err;
+        }
+    }, 2000, {
+        leading: false,
+        trailing: true,
+        maxWait: 10000,
+    });
+
     constructor(props: IGeocodingAutocompleteProps) {
         super(props);
 
@@ -92,6 +107,8 @@ export default class GeocodingAutocomplete extends Component<IGeocodingAutocompl
             suggestions: [],
             suggestionsLoading: false,
             selectedSuggestion: null,
+            selectedPlaceLoading: false,
+            selectedPlace: null,
         };
     }
 
@@ -112,10 +129,67 @@ export default class GeocodingAutocomplete extends Component<IGeocodingAutocompl
                                            onSelectSuggestion={this.onSelectSuggestion}
                                            placeholder="Enter 2 or more letters to search place"/>
                 </fieldset>
+                <fieldset>
+                    <legend>Selected place</legend>
+                    {state.selectedPlaceLoading ? <i class="far fa-compass fa-spin"></i> : null}
+                    {(state.selectedPlace && state.selectedPlace.Location && state.selectedPlace.Location.Address) ?
+                        <div>{state.selectedPlace.Location.Address.Label}</div> : null}
+                </fieldset>
             </form>
         </div>;
     }
 
+    private async updateSelectedPlace(locationId: string) {
+        if (this.fetchPlaceAbortController) {
+            this.fetchPlaceAbortController.abort();
+        }
+        try {
+            const promiseWithAborter = fetchGeocodeDetails({locationid: locationId});
+            this.fetchPlaceAbortController = promiseWithAborter.abortController;
+            this.setState({
+                selectedPlaceLoading: true,
+                selectedPlace: null,
+            });
+
+            const geocodeResponse = await promiseWithAborter.promise;
+            let selectedPlace = null;
+            this.fetchPlaceAbortController = null;
+            if (geocodeResponse &&
+                geocodeResponse.View &&
+                geocodeResponse.View.length &&
+                geocodeResponse.View[0].Result &&
+                geocodeResponse.View[0].Result.length) {
+                selectedPlace = geocodeResponse.View[0].Result[0];
+            }
+            this.setState({
+                selectedPlace,
+                selectedPlaceLoading: false,
+            });
+            if (this.props.onSelectItem && selectedPlace) {
+                this.props.onSelectItem(selectedPlace);
+            }
+            return true;
+        } catch (err) {
+            this.setState({
+                selectedPlaceLoading: false,
+            });
+            if (err instanceof DOMException && (err as DOMException).code === DOMException.ABORT_ERR) {
+                // request canceled with AbortController
+                return false;
+            }
+            throw err;
+        }
+    }
+
+    @autobind
+    private onSelectSuggestion(suggestion: IHereSuggestion) {
+        this.setState({
+            selectedSuggestion: suggestion,
+        });
+        if (suggestion && suggestion.locationId) {
+            this.updateSelectedPlace(suggestion.locationId);
+        }
+    }
 
     @autobind
     private async onSearchTermChange(e: Event): Promise<boolean> {
@@ -128,7 +202,7 @@ export default class GeocodingAutocomplete extends Component<IGeocodingAutocompl
             return false;
         }
 
-        return this.updateSuggestionsDebounced(searchTerm, this);
+        return this.updateSuggestionsDebounced(searchTerm);
     }
 
 }

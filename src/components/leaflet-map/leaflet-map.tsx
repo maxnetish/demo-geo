@@ -5,6 +5,7 @@ import 'leaflet-providers';
 
 interface ILeafletMapProps {
     provider: string;
+    onMapReady?: (map: L.Map) => void;
 }
 
 export default class LeafletMap extends Component<ILeafletMapProps, {}> {
@@ -24,6 +25,9 @@ export default class LeafletMap extends Component<ILeafletMapProps, {}> {
     public componentDidMount() {
         this.leafletMap = LeafletMap.initMap();
         this.updateTileLayer(this.props.provider);
+        if (this.props.onMapReady) {
+            this.props.onMapReady(this.leafletMap);
+        }
     }
 
     public componentDidUpdate(previousProps: ILeafletMapProps, previousState: {}, previousContext: any) {
