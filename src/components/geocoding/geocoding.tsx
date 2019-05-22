@@ -4,7 +4,7 @@ import debounce from 'lodash/debounce';
 import {sanitize} from 'dompurify';
 import classNames from 'classnames';
 
-import './geocoding-autocomplete.less';
+import './geocoding.less';
 
 import {
     fetchSuggestions,
@@ -27,7 +27,7 @@ interface IGeocodingAutocompleteState {
     selectedPlace: IHereSearchResult | null;
 }
 
-export default class GeocodingAutocomplete extends Component<IGeocodingAutocompleteProps, IGeocodingAutocompleteState> {
+export default class Geocoding extends Component<IGeocodingAutocompleteProps, IGeocodingAutocompleteState> {
 
     private static iconByMatchLevel(matchLevel?: string) {
         if (!matchLevel) {
@@ -49,7 +49,7 @@ export default class GeocodingAutocomplete extends Component<IGeocodingAutocompl
     private static renderSuggestion(suggestion: IHereSuggestion) {
         return <div class="dg-autocomplete-suggesttion">
             <div class="dg-autocomplete-suggesttion-match-level">
-                <i class={GeocodingAutocomplete.iconByMatchLevel(suggestion.matchLevel)}></i>
+                <i class={Geocoding.iconByMatchLevel(suggestion.matchLevel)}></i>
             </div>
             <div class="dg-autocomplete-suggesttion-label"
                  dangerouslySetInnerHTML={{__html: suggestion.label ? sanitize(suggestion.label) : ''}}/>
@@ -119,12 +119,12 @@ export default class GeocodingAutocomplete extends Component<IGeocodingAutocompl
     ): ComponentChild {
 
         return <div class="dg-geocoding-autocomplete">
-            <form className="pure-form">
+            <form className="pure-form" onSubmit={(e) => e.preventDefault()}>
                 <fieldset>
                     <legend>Search</legend>
                     <AutocompleteComponent class="pure-input-1" value={state.searchTerm}
                                            onInput={this.onSearchTermChange} suggestions={state.suggestions}
-                                           suggestionComponent={GeocodingAutocomplete.renderSuggestion}
+                                           suggestionComponent={Geocoding.renderSuggestion}
                                            loading={state.suggestionsLoading}
                                            onSelectSuggestion={this.onSelectSuggestion}
                                            placeholder="Enter 2 or more letters to search place"/>
