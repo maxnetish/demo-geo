@@ -1,0 +1,30 @@
+.place-card {
+  display: flex;
+  padding: 0.5em 0.5em 0.5em 0;
+
+  .place-card__icon-ct {
+    color: gray;
+    font-size: x-large;
+  }
+
+  .place-card__text-ct {
+    flex-grow: 1;
+    padding: 0 0.25em;
+  }
+
+  .place-card__remove-btn {
+    padding: 0;
+    background: none;
+    color: gray;
+  }
+}
+
+.place-card__selected-border {
+  box-shadow: 0px 0px 0px 2px #ffffff;
+  /*border: solid 2px #3388ff;*/
+  transition: box-shadow 0.2s linear;
+
+  &.selected {
+    box-shadow: 0px 0px 0px 2px #3388ff;
+  }
+}

@@ -129,12 +129,12 @@ export default class Geocoding extends Component<IGeocodingAutocompleteProps, IG
                                            onSelectSuggestion={this.onSelectSuggestion}
                                            placeholder="Enter 2 or more letters to search place"/>
                 </fieldset>
-                <fieldset>
-                    <legend>Selected place</legend>
-                    {state.selectedPlaceLoading ? <i class="far fa-compass fa-spin"></i> : null}
-                    {(state.selectedPlace && state.selectedPlace.Location && state.selectedPlace.Location.Address) ?
-                        <div>{state.selectedPlace.Location.Address.Label}</div> : null}
-                </fieldset>
+                {/*<fieldset>*/}
+                    {/*<legend>Selected place</legend>*/}
+                    {/*{state.selectedPlaceLoading ? <i class="far fa-compass fa-spin"></i> : null}*/}
+                    {/*{(state.selectedPlace && state.selectedPlace.Location && state.selectedPlace.Location.Address) ?*/}
+                        {/*<div>{state.selectedPlace.Location.Address.Label}</div> : null}*/}
+                {/*</fieldset>*/}
             </form>
         </div>;
     }

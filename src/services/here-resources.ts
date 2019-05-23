@@ -256,7 +256,7 @@ export interface IHereSearchResult {
     MatchType?: HereMatchType;
     MatchCode?: HereMatchCode;
     ParsedRequest?: IHereParsedRequest;
-    Location?: IHereLocation;
+    Location: IHereLocation;
     AdditionalData?: IHereKeyValuePair[];
 }
 
@@ -288,7 +288,8 @@ export type HereLocationType =
     | 'parkingGarage'
     | 'anymalPark'
     | 'beach'
-    | 'distanceMarker';
+    | 'distanceMarker'
+    | 'point';
 
 export interface IHereLocation {
     LocationId: string;
@@ -539,7 +540,7 @@ export function fetchSuggestions(request: IHereSuggestionRequest): IPromiseWithA
     const abortController = new AbortController();
 
     return {
-        promise: fetch(`/autocomplete.geocoder.api.here.com/6.2/suggest.json?${query}`, {
+        promise: fetch(`/autocomplete.geocoder.cit.api.here.com/6.2/suggest.json?${query}`, {
             cache: 'default',
             // credentials: 'same-origin',
             method: 'GET',
@@ -562,10 +563,10 @@ export function fetchGeocodeDetails(request: IHereGeocodeRequest): IPromiseWithA
     const query = serializeToQuery(request);
     const abortController = new AbortController();
     return {
-        promise:  fetch(`/geocoder.api.here.com/6.2/geocode.json?${query}`, {
+        promise:  fetch(`/geocoder.cit.api.here.com/6.2/geocode.json?${query}`, {
             cache: "default",
             method: 'GET',
-            signal: abortController.signal
+            signal: abortController.signal,
         })
             .then((res) => {
                 if (res.ok) {
