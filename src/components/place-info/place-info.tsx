@@ -1,6 +1,6 @@
 import {h, Component, ComponentChild} from 'preact';
 import {autobind} from 'core-decorators';
-import {PlaceInfo} from "../../models/place";
+import {IPlaceInfo} from "../../models/place";
 import {HereLocationType} from "../../services/here-resources";
 import classNames from 'classnames';
 import {Nullable} from "../../utils/nullable";
@@ -8,9 +8,9 @@ import {Nullable} from "../../utils/nullable";
 import './place-card.less';
 
 interface IPlaceInfoComponentProps {
-    place: PlaceInfo;
-    onRemoveClick?: (placeInfo: PlaceInfo) => void;
-    onSelectClick?: (placeInfo: PlaceInfo) => void;
+    place: IPlaceInfo;
+    onRemoveClick?: (placeInfo: IPlaceInfo) => void;
+    onSelectClick?: (placeInfo: IPlaceInfo) => void;
 }
 
 const defaultLocationType: HereLocationType = 'point';
@@ -73,14 +73,14 @@ export default class PlaceInfoComponent extends Component<IPlaceInfoComponentPro
         </div>;
     }
 
-    public shouldComponentUpdate(
-        nextProps: Readonly<IPlaceInfoComponentProps>,
-        nextState: Readonly<{}>,
-        nextContext: any,
-    ): boolean {
-        return this.props.place.selected !== nextProps.place.selected ||
-            this.props.place.locationId !== nextProps.place.locationId;
-    }
+    // public shouldComponentUpdate(
+    //     nextProps: Readonly<IPlaceInfoComponentProps>,
+    //     nextState: Readonly<{}>,
+    //     nextContext: any,
+    // ): boolean {
+    //     return this.props.place.selected !== nextProps.place.selected ||
+    //         this.props.place.locationId !== nextProps.place.locationId;
+    // }
 
     @autobind
     private onRemoveClick(e: Event) {

@@ -514,6 +514,17 @@ function serializeToQuery<T>(req: T): string {
     return resultAsArray.join('&');
 }
 
+function generalFetchErrHandler(res: Response): Response {
+    if (res.ok) {
+        return res;
+    }
+    throw new Error(`Fetch failed with status ${res.status} ${res.statusText}`);
+}
+
+function parseJsonBody(res: Response): Promise<any> {
+    return res.json();
+}
+
 
 /**
  * Nginx proxy should add app_id and app_code to query
@@ -535,7 +546,9 @@ function serializeToQuery<T>(req: T): string {
  *
  * @param request
  */
-export function fetchSuggestions(request: IHereSuggestionRequest): IPromiseWithAbortController<IHereSuggestion[]> {
+export function fetchSuggestions(
+    request: IHereSuggestionRequest,
+): IPromiseWithAbortController<IHereSuggestion[]> {
     const query = serializeToQuery(request);
     const abortController = new AbortController();
 
@@ -547,13 +560,8 @@ export function fetchSuggestions(request: IHereSuggestionRequest): IPromiseWithA
             // mode: "cors"
             signal: abortController.signal,
         })
-            .then((res) => {
-                if (res.ok) {
-                    return res;
-                }
-                throw new Error(`Fetch failed with status ${res.status} ${res.statusText}`);
-            })
-            .then((res) => res.json())
+            .then(generalFetchErrHandler)
+            .then(parseJsonBody)
             .then((d) => d.suggestions),
         abortController,
     };
@@ -563,18 +571,13 @@ export function fetchGeocodeDetails(request: IHereGeocodeRequest): IPromiseWithA
     const query = serializeToQuery(request);
     const abortController = new AbortController();
     return {
-        promise:  fetch(`/geocoder.cit.api.here.com/6.2/geocode.json?${query}`, {
+        promise: fetch(`/geocoder.cit.api.here.com/6.2/geocode.json?${query}`, {
             cache: "default",
             method: 'GET',
             signal: abortController.signal,
         })
-            .then((res) => {
-                if (res.ok) {
-                    return res;
-                }
-                throw new Error(`Fetch failed with status ${res.status} ${res.statusText}`);
-            })
-            .then((res) => res.json())
+            .then(generalFetchErrHandler)
+            .then(parseJsonBody)
             .then((d) => d.Response),
         abortController,
     };

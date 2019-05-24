@@ -2,76 +2,60 @@ import {latLng, LatLng, latLngBounds, LatLngBounds} from "leaflet";
 import {HereLocationType, IHereGeoBoundingBox, IHereGeoCoordinate, IHereSearchResult} from "../services/here-resources";
 import {Nullable} from "../utils/nullable";
 
-export class PlaceInfo {
+export interface IPlaceInfo {
+    locationId: string;
+    placeType: HereLocationType;
+    bounds: Nullable<LatLngBounds>;
+    location: Nullable<LatLng>;
+    title: Nullable<string>;
+    description: Nullable<string>;
+    selected: boolean;
+}
 
-    get locationId(): string {
-        return this.$locationId;
+export function placeInfoToPlain(place: IPlaceInfo): any {
+    const plainObj = {
+        locationId: place.locationId,
+        placeType: place.placeType,
+        bounds: place.bounds ? [{
+            lat: place.bounds.getSouthWest().lat,
+            lng: place.bounds.getSouthWest().lng,
+        }, {
+            lat: place.bounds.getNorthEast().lat,
+            lng: place.bounds.getNorthEast().lng,
+        }] : null,
+        location: place.location ? {lat: place.location.lat, lng: place.location.lng} : null,
+        title: place.title,
+        description: place.description,
+    };
+    return plainObj;
+}
+
+export function placeInfoFromPlain(plainInfoPlain: any): IPlaceInfo {
+    if (!plainInfoPlain) {
+        throw new Error('Cannot deserialize PlaceInfo');
     }
 
-    get placeType(): Nullable<HereLocationType> {
-        return this.$placeType;
-    }
+    return {
+        locationId: plainInfoPlain.locationId,
+        placeType: plainInfoPlain.placeType || 'point',
+        bounds: latLngBounds(plainInfoPlain.bounds) || null,
+        location: latLng(plainInfoPlain.location) || null,
+        title: plainInfoPlain.title || null,
+        description: plainInfoPlain.description || null,
+        selected: false,
+    };
+}
 
-    get bounds(): Nullable<LatLngBounds> {
-        return this.$bounds;
-    }
-
-    get location(): Nullable<LatLng> {
-        return this.$location;
-    }
-
-    get label(): Nullable<string> {
-        if (this.$title && this.$description) {
-            return `${this.$title} (${this.$description})`;
-        }
-        if (this.$title || this.$description) {
-            return this.$title || this.$description;
-        }
-        return null;
-    }
-
-    get title(): Nullable<string> {
-        return this.$title;
-    }
-
-    get description(): Nullable<string> {
-        return this.$description;
-    }
-
-    public static fromHereSearchResult(hereResult: IHereSearchResult): PlaceInfo {
-        return new PlaceInfo(
-            hereResult.Location.LocationId,
-            hereCoordinateToLatLng(hereResult.Location.DisplayPosition),
-            hereGeoBoundingBoxToLatLngBounds(hereResult.Location.MapView),
-            hereResult.Location.LocationType,
-            hereResult.Location.Name,
-            hereResult.Location.Address && hereResult.Location.Address.Label,
-        );
-    }
-
-    public Clone(): PlaceInfo {
-        return new PlaceInfo(
-            this.locationId,
-            this.location,
-            this.bounds,
-            this.placeType,
-            this.title,
-            this.description,
-            this.selected,
-        );
-    }
-
-    constructor(
-        private $locationId: string,
-        private $location: Nullable<LatLng> = null,
-        private $bounds: Nullable<LatLngBounds> = null,
-        private $placeType: Nullable<HereLocationType> = 'point',
-        private $title: Nullable<string> = null,
-        private $description: Nullable<string> = null,
-        public selected: boolean = false,
-    ) {
-
-    }
+export function hereSearchResultToPlaceInfo(hereResult: IHereSearchResult): IPlaceInfo {
+    return {
+        placeType: hereResult.Location.LocationType || 'point',
+        locationId: hereResult.Location.LocationId,
+        location: hereCoordinateToLatLng(hereResult.Location.DisplayPosition),
+        bounds: hereGeoBoundingBoxToLatLngBounds(hereResult.Location.MapView),
+        description: (hereResult.Location.Address && hereResult.Location.Address.Label) || null,
+        selected: false,
+        title: hereResult.Location.Name || null,
+    };
 }
 
 export function hereGeoBoundingBoxToLatLngBounds(boundingBox?: IHereGeoBoundingBox): Nullable<LatLngBounds> {

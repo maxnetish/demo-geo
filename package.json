@@ -64,6 +64,7 @@
     "classnames": "^2.2.6",
     "core-decorators": "^0.20.0",
     "dompurify": "^1.0.10",
+    "immutable": "^4.0.0-rc.12",
     "leaflet": "^1.5.1",
     "leaflet-providers": "^1.7.0",
     "lodash": "^4.17.11",
