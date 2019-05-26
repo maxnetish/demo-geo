@@ -1,7 +1,9 @@
 import {h, Component} from 'preact';
 
-import {Map, TileLayer, tileLayer, map, LatLngBounds, CircleMarker, circleMarker, LatLng} from 'leaflet';
+import {Map, TileLayer, tileLayer, map, LatLngBounds, CircleMarker, circleMarker, LatLng, latLngBounds} from 'leaflet';
 import 'leaflet-providers';
+import {ICoords} from "../../models/coords";
+import {Nullable} from "../../utils/nullable";
 
 interface ILeafletMapProps {
     provider: string;
@@ -47,23 +49,23 @@ export default class LeafletMap extends Component<ILeafletMapProps, {}> {
     }
 
     public render() {
-        return <div class="dg-map-ct" id="dg-leaflet-map-place"></div>;
+        return <div id="dg-leaflet-map-place"></div>;
     }
 
-    public showPlace({bounds = null, coords = null}: { bounds: LatLngBounds | null, coords: LatLng | null }) {
+    public showPlace({bounds = null, location = null}: { bounds: Nullable<[ICoords, ICoords]>, location: Nullable<ICoords> }) {
         if (!this.leafletMap) {
             return;
         }
         if (bounds) {
-            this.leafletMap.flyToBounds(bounds);
+            this.leafletMap.flyToBounds(latLngBounds(bounds));
         }
-        if (coords) {
-            this.placeMarker = this.placeMarker || circleMarker(coords, {
+        if (location) {
+            this.placeMarker = this.placeMarker || circleMarker(location, {
                 weight: 2,
                 fill: false,
                 radius: 50,
             });
-            this.placeMarker.setLatLng(coords);
+            this.placeMarker.setLatLng(location);
             this.placeMarker.addTo(this.leafletMap);
         } else if (this.placeMarker) {
             this.placeMarker.removeFrom(this.leafletMap);

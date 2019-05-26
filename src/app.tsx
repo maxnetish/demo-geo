@@ -9,20 +9,28 @@ import {autobind} from 'core-decorators';
 import {IHereSearchResult} from "./services/here-resources";
 import {
     IPlaceInfo,
-    hereSearchResultToPlaceInfo,
-    placeInfoToPlain,
-    placeInfoFromPlain,
+    PlaceInfo,
 } from "./models/place";
 import PlaceInfoComponent from "./components/place-info/place-info";
+import ExpanderComponent from "./components/expander/expander";
 
 interface IAppState {
     provider: string;
-    places: List<IPlaceInfo>;
+    places: List<PlaceInfo>;
 }
 
 const localStorageKey = 'dg-app-state';
 
 export default class App extends Component<{}, IAppState> {
+
+    componentWillUnmount(): void {
+        window.removeEventListener('storage', this.storageEventHandler);
+    }
+
+    componentDidMount(): void {
+        this.updateStateFromSerializedState(window.localStorage.getItem(localStorageKey));
+        window.addEventListener('storage', this.storageEventHandler);
+    }
 
     private leafletMapComponentRef: LeafletMap;
 
@@ -33,43 +41,40 @@ export default class App extends Component<{}, IAppState> {
             provider: 'OpenStreetMap.Mapnik',
             places: List(),
         };
-
-        this.updateStateFromLocalStorageEvent(window.localStorage.getItem(localStorageKey));
-        window.addEventListener('storage', (e) => {
-            if (e.key !== localStorageKey) {
-                return;
-            }
-            this.updateStateFromLocalStorageEvent(e.newValue);
-        });
     }
 
     public render(props: {}, {provider, places}: IAppState, ctx: any) {
         return <div class="pure-g">
             <div class="pure-u-1 pure-u-md-1-4">
                 <div class=" dg-left-pane-ct">
-                    <SelectTileProvider onChange={this.onSelectProvider} provider={provider}/>
-                    <Geocoding onSelectItem={this.onSelectPlaceInGeocoding}/>
+                    <SelectTileProvider onChange={this.selectProviderEventHandler} provider={provider}/>
+                    <Geocoding onSelectItem={this.selectPlaceInGeocodingEventHandler}/>
                     {places.size ? <div>
-                        <header>Selected places</header>
-                        <ul class="dg-list-unstyled">
-                            {places.map((place: IPlaceInfo, ind: number) => <li>
-                                <PlaceInfoComponent
-                                    place={place}
-                                    onSelectClick={() => this.onSelectPlaceInList(ind)}/>
-                            </li>).toArray()}
-                        </ul>
+                        <ExpanderComponent expanded={true}
+                                           header="Selected places">
+                            <ul class="dg-list-unstyled">
+                                {places.map((place: PlaceInfo, ind: number) => <li>
+                                    <PlaceInfoComponent
+                                        place={place}
+                                        onSelectClick={() => this.selectPlaceInListEventHandler(ind)}
+                                        onRemoveClick={() => this.removePlaceInListHandler(ind)}/>
+                                </li>).toArray()}
+                            </ul>
+                        </ExpanderComponent>
                     </div> : null}
                 </div>
             </div>
             <div class="pure-u-1 pure-u-md-3-4">
-                <LeafletMap provider={provider}
-                            ref={(c) => this.leafletMapComponentRef = c}/>
+                <div class="dg-map-ct">
+                    <LeafletMap provider={provider}
+                                ref={(c) => this.leafletMapComponentRef = c}/>
+                </div>
             </div>
         </div>;
     }
 
     @autobind
-    private onSelectProvider({code}: { code: string }) {
+    private selectProviderEventHandler({code}: { code: string }) {
         this.setState({provider: code});
     }
 
@@ -78,12 +83,10 @@ export default class App extends Component<{}, IAppState> {
      * @param item
      */
     @autobind
-    private onSelectPlaceInGeocoding(item: IHereSearchResult) {
-        const placeInfo = hereSearchResultToPlaceInfo(item);
-        placeInfo.selected = true;
-        this.toggleMapMarker(placeInfo);
+    private selectPlaceInGeocodingEventHandler(item: IHereSearchResult) {
+        const placeInfo = PlaceInfo.fromHereSearchResult(item);
         const places = this.state.places.withMutations((list) => {
-            list.push(hereSearchResultToPlaceInfo(item));
+            list.push(placeInfo);
             for (const ind of list.keys()) {
                 if (ind === list.size - 1) {
                     list.setIn([ind, 'selected'], true);
@@ -92,6 +95,7 @@ export default class App extends Component<{}, IAppState> {
                 }
             }
         });
+        this.toggleMapMarker(places.find((p: PlaceInfo) => !!p.selected));
         this.setState({
             places,
         }, () => {
@@ -99,16 +103,16 @@ export default class App extends Component<{}, IAppState> {
         });
     }
 
-    private toggleMapMarker(place?: IPlaceInfo) {
+    private toggleMapMarker(place?: PlaceInfo) {
         if (place && place.selected) {
-            this.leafletMapComponentRef.showPlace({bounds: place.bounds, coords: place.location});
+            this.leafletMapComponentRef.showPlace(place);
         } else {
-            this.leafletMapComponentRef.showPlace({bounds: null, coords: null});
+            this.leafletMapComponentRef.showPlace({bounds: null, location: null});
         }
     }
 
-    private onSelectPlaceInList(indexOfSelectedToggle: number) {
-        const places = this.state.places.withMutations((list: List<IPlaceInfo>) => {
+    private selectPlaceInListEventHandler(indexOfSelectedToggle: number) {
+        const places = this.state.places.withMutations((list: List<PlaceInfo>) => {
             for (const ind of list.keys()) {
                 if (indexOfSelectedToggle === ind) {
                     list.setIn([ind, 'selected'], !list.getIn([ind, 'selected']));
@@ -123,21 +127,44 @@ export default class App extends Component<{}, IAppState> {
         });
     }
 
-    private updateLocalStorageFromState() {
-        window.localStorage.setItem(localStorageKey, JSON.stringify({places: this.state.places.toArray().map((p) => placeInfoToPlain(p))}));
+    private removePlaceInListHandler(indexToRemove: number) {
+        const places = this.state.places.remove(indexToRemove);
+        this.setState({
+            places,
+        }, () => {
+            this.updateLocalStorageFromState();
+        });
     }
 
-    private updateStateFromLocalStorageEvent(stateSerialized: string | null) {
-        let places: List<IPlaceInfo>;
+    private updateLocalStorageFromState() {
+        window.localStorage.setItem(localStorageKey, JSON.stringify({places: this.state.places}));
+    }
+
+    private updateStateFromSerializedState(stateSerialized: string | null) {
+        let places: List<PlaceInfo>;
         if (!stateSerialized) {
             places = this.state.places.clear();
+            this.toggleMapMarker();
         } else {
-            const stateDeserialized = JSON.parse(stateSerialized);
-            places = List<IPlaceInfo>(stateDeserialized.places.map((p: any) => placeInfoFromPlain(p)));
+            const placesDeserialized = (JSON.parse(stateSerialized) as { places: IPlaceInfo[] }).places;
+            const seletedPlace = this.state.places.find(p => !!p.selected);
+            const selectedLocationId = seletedPlace ? seletedPlace.locationId : null;
+            places = List<PlaceInfo>(placesDeserialized.map((p: IPlaceInfo) => {
+                p.selected = p.locationId === selectedLocationId;
+                return new PlaceInfo(p);
+            }));
+
         }
         this.setState({
             places,
         });
+    }
+
+    @autobind
+    private storageEventHandler(e: StorageEvent): void {
+        if (e.key === localStorageKey) {
+            this.updateStateFromSerializedState(e.newValue);
+        }
     }
 
 }

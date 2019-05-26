@@ -1,19 +1,69 @@
 import {latLng, LatLng, latLngBounds, LatLngBounds} from "leaflet";
 import {HereLocationType, IHereGeoBoundingBox, IHereGeoCoordinate, IHereSearchResult} from "../services/here-resources";
 import {Nullable} from "../utils/nullable";
+import {Record} from 'immutable';
+import {ICoords} from "./coords";
 
 export interface IPlaceInfo {
     locationId: string;
     placeType: HereLocationType;
-    bounds: Nullable<LatLngBounds>;
-    location: Nullable<LatLng>;
+    bounds: Nullable<[ICoords, ICoords]>;
+    location: Nullable<ICoords>;
     title: Nullable<string>;
     description: Nullable<string>;
-    selected: boolean;
+    selected?: boolean;
 }
 
-export function placeInfoToPlain(place: IPlaceInfo): any {
-    const plainObj = {
+// export type PlaceInfoRecord = Record<IPlaceInfo> & Readonly<IPlaceInfo>;
+
+const PlaceInfoRecord = Record<IPlaceInfo>({
+    bounds: null,
+    description: null,
+    location: null,
+    locationId: '',
+    placeType: 'point',
+    selected: false,
+    title: null,
+}, 'Geo place information');
+
+export class PlaceInfo extends PlaceInfoRecord implements Readonly<IPlaceInfo> {
+    toJSON(): IPlaceInfo {
+        const result = super.toJSON();
+        delete result.selected;
+        return result;
+    }
+
+    public static fromHereSearchResult(hereResult: IHereSearchResult): PlaceInfo {
+        return new PlaceInfo({
+            placeType: hereResult.Location.LocationType || 'point',
+            locationId: hereResult.Location.LocationId,
+            location: hereResult.Location.DisplayPosition ?
+                {
+                    lat: hereResult.Location.DisplayPosition.Latitude,
+                    lng: hereResult.Location.DisplayPosition.Longitude,
+                } :
+                null,
+            bounds: hereResult.Location.MapView ? [
+                {
+                    lat: hereResult.Location.MapView.TopLeft.Latitude,
+                    lng: hereResult.Location.MapView.TopLeft.Longitude
+                },
+                {
+                    lat: hereResult.Location.MapView.BottomRight.Latitude,
+                    lng: hereResult.Location.MapView.BottomRight.Longitude,
+                }
+            ] : null,
+            description: (hereResult.Location.Address && hereResult.Location.Address.Label) || null,
+            selected: false,
+            title: hereResult.Location.Name || null,
+        });
+    }
+}
+
+/*
+export function placeInfoToPlain(place: PlaceInfoRecord): Object {
+
+    return {
         locationId: place.locationId,
         placeType: place.placeType,
         bounds: place.bounds ? [{
@@ -27,13 +77,18 @@ export function placeInfoToPlain(place: IPlaceInfo): any {
         title: place.title,
         description: place.description,
     };
-    return plainObj;
 }
+*/
 
-export function placeInfoFromPlain(plainInfoPlain: any): IPlaceInfo {
+/*
+export function placeInfoFromPlain(plainInfoPlain: Object): PlaceInfoRecord {
     if (!plainInfoPlain) {
         throw new Error('Cannot deserialize PlaceInfo');
     }
+
+    // return PlaceInfoRecord({
+    //     locationId: plainInfoPlain.locationId;
+    // })
 
     return {
         locationId: plainInfoPlain.locationId,
@@ -45,7 +100,9 @@ export function placeInfoFromPlain(plainInfoPlain: any): IPlaceInfo {
         selected: false,
     };
 }
+*/
 
+/*
 export function hereSearchResultToPlaceInfo(hereResult: IHereSearchResult): IPlaceInfo {
     return {
         placeType: hereResult.Location.LocationType || 'point',
@@ -57,7 +114,9 @@ export function hereSearchResultToPlaceInfo(hereResult: IHereSearchResult): IPla
         title: hereResult.Location.Name || null,
     };
 }
+ */
 
+/*
 export function hereGeoBoundingBoxToLatLngBounds(boundingBox?: IHereGeoBoundingBox): Nullable<LatLngBounds> {
     if (!boundingBox) {
         return null;
@@ -73,10 +132,13 @@ export function hereGeoBoundingBoxToLatLngBounds(boundingBox?: IHereGeoBoundingB
         ),
     );
 }
+ */
 
+/*
 export function hereCoordinateToLatLng(coords?: IHereGeoCoordinate): Nullable<LatLng> {
     if (!coords) {
         return null;
     }
     return latLng(coords.Latitude, coords.Longitude);
 }
+ */
