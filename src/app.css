@@ -1,16 +1,53 @@
 .dg-map-ct {
     height: 100vh;
     background-color: gray;
-    position: fixed;
-    width: 100%;
+    position: relative;
+    box-shadow: 0 0 12px 2px #333333
+}
+
+@media screen and (min-width: 48em) {
+    .dg-map-ct {
+        position: fixed;
+        right: 0;
+        height: 100%;
+    }
 }
 
 .dg-map-ct #dg-leaflet-map-place {
     height: 100%;
 }
 
+.dg-button-search-to-map {
+    position: fixed;
+    right: 1em;
+    top: 1em;
+    box-shadow: 0 0 6px 1px #333;
+    z-index: 1;
+}
+
+@media screen and (min-width: 48em) {
+    .dg-button-search-to-map {
+        display: none;
+    }
+}
+
+.dg-button-map-to-search {
+    z-index: 1000;
+    position: absolute;
+    right: 1em;
+    top: 1em;
+    box-shadow: 0 0 6px 1px #333
+}
+
+@media screen and (min-width: 48em) {
+    .dg-button-map-to-search {
+        display: none;
+    }
+}
+
 .dg-left-pane-ct {
     padding: 0 1rem;
+    position: relative;
 }
 
 body {
@@ -50,4 +87,12 @@ body {
 
 header {
     color: #333333;
+}
+
+.dg-expander-light-component {
+    --dg-expander-title-color: #333333;
+}
+
+.m-r-medium {
+    margin-right: 0.25em;
 }

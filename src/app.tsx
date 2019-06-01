@@ -12,7 +12,8 @@ import {
     PlaceInfo,
 } from "./models/place";
 import PlaceInfoComponent from "./components/place-info/place-info";
-import ExpanderComponent from "./components/expander/expander";
+
+import './webcomponents/expander-webcomponent/expander-webcomponent';
 
 interface IAppState {
     provider: string;
@@ -33,6 +34,7 @@ export default class App extends Component<{}, IAppState> {
     }
 
     private leafletMapComponentRef: LeafletMap;
+    private searchPanelRef: HTMLElement;
 
     constructor() {
         super();
@@ -46,13 +48,16 @@ export default class App extends Component<{}, IAppState> {
     public render(props: {}, {provider, places}: IAppState, ctx: any) {
         return <div class="pure-g">
             <div class="pure-u-1 pure-u-md-1-4">
-                <div class=" dg-left-pane-ct">
+                <div class=" dg-left-pane-ct" ref={(c) => this.searchPanelRef = c}>
+                    <button type="button" class="pure-button dg-button-search-to-map" onClick={this.searchToMapHandler}>
+                        <i class="fas fa-arrow-circle-down m-r-medium"></i>
+                        To map
+                    </button>
                     <SelectTileProvider onChange={this.selectProviderEventHandler} provider={provider}/>
                     <Geocoding onSelectItem={this.selectPlaceInGeocodingEventHandler}/>
                     {places.size ? <div>
-                        <ExpanderComponent expanded={true}
-                                           header="Selected places">
-                            <ul class="dg-list-unstyled">
+                        <dg-expander title-text="Selected places" open class="dg-expander-light-component">
+                            <ul slot="content" class="dg-list-unstyled">
                                 {places.map((place: PlaceInfo, ind: number) => <li>
                                     <PlaceInfoComponent
                                         place={place}
@@ -60,22 +65,52 @@ export default class App extends Component<{}, IAppState> {
                                         onRemoveClick={() => this.removePlaceInListHandler(ind)}/>
                                 </li>).toArray()}
                             </ul>
-                        </ExpanderComponent>
+                        </dg-expander>
                     </div> : null}
                 </div>
             </div>
-            <div class="pure-u-1 pure-u-md-3-4">
-                <div class="dg-map-ct">
-                    <LeafletMap provider={provider}
-                                ref={(c) => this.leafletMapComponentRef = c}/>
-                </div>
+            <div class="pure-u-1 pure-u-md-3-4 dg-map-ct">
+                <button class="pure-button dg-button-map-to-search" type="button" onClick={this.mapToSearchHandler}>
+                    <i class="fas fa-arrow-circle-up m-r-medium"></i>
+                    To search
+                </button>
+                <LeafletMap provider={provider}
+                            ref={(c) => this.leafletMapComponentRef = c}/>
             </div>
         </div>;
     }
 
     @autobind
+    private toggleHandler(e: Event) {
+        console.log(e);
+    }
+
+    @autobind
     private selectProviderEventHandler({code}: { code: string }) {
         this.setState({provider: code});
+    }
+
+    @autobind
+    searchToMapHandler() {
+        console.log(this.leafletMapComponentRef);
+        if (this.leafletMapComponentRef && this.leafletMapComponentRef.base) {
+            this.leafletMapComponentRef.base.scrollIntoView({
+                behavior: "smooth",
+                block: "end",
+                inline: "nearest",
+            });
+        }
+    }
+
+    @autobind
+    mapToSearchHandler() {
+        if (this.searchPanelRef) {
+            this.searchPanelRef.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+                inline: "nearest",
+            });
+        }
     }
 
     /**
@@ -117,6 +152,7 @@ export default class App extends Component<{}, IAppState> {
                 if (indexOfSelectedToggle === ind) {
                     list.setIn([ind, 'selected'], !list.getIn([ind, 'selected']));
                     this.toggleMapMarker(list.get(ind));
+                    this.searchToMapHandler();
                 } else {
                     list.setIn([ind, 'selected'], false);
                 }

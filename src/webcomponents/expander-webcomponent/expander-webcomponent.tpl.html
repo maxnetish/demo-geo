@@ -1,0 +1,52 @@
+<style>
+    :host {
+        display: block;
+    }
+
+    :host([hidden]) {
+        display: none;
+    }
+
+    .dg-expander-content {
+        overflow-y: hidden;
+        transition: height 0.25s cubic-bezier(0.6, -0.28, 0.74, 0.05);
+    }
+
+    :host([open]) .dg-expander-content {
+       /*height: auto;*/
+    }
+
+    .dg-expander-marker, .dg-expander-title {
+        cursor: pointer;
+    }
+
+    .dg-expander-title {
+        font: var(--dg-expander-title-font);
+        color: var(--dg-expander-title-color);
+    }
+
+    .dg-expander-marker {
+        border-style: solid;
+        border-width: 0 0.15em 0.15em 0;
+        display: inline-block;
+        padding: 0.2em;
+        margin: 0 0.5em 0 0;
+        transition: transform .25s cubic-bezier(0.6, -0.28, 0.74, 0.05);
+        transform: rotate(-135deg) translate(-0.15em, 0.1em);;
+    }
+
+    :host([open]) .dg-expander-marker {
+        transform: rotate(45deg) translate(0, -0.2em);
+    }
+</style>
+<div class="dg-expander-toggle">
+    <slot name="title">
+        <i class="dg-expander-marker"></i>
+        <span class="dg-expander-title">Details</span>
+    </slot>
+</div>
+<div class="dg-expander-content">
+    <div class="dg-expander-content-inner">
+        <slot name="content">Content from Shadow DOM</slot>
+    </div>
+</div>

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "experimentalDecorators": true,
     "sourceMap": true,
-    "module": "commonjs",
+    "module": "CommonJS",
     "jsx": "react",
     "jsxFactory": "h",
     "target": "es6",

@@ -132,6 +132,10 @@ module.exports = {
                         }
                     }
                 ]
+            },
+            {
+                test: /\.tpl.html$/,
+                use: 'raw-loader'
             }
         ]
     }
