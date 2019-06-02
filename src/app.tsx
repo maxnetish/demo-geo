@@ -90,9 +90,9 @@ export default class App extends Component<{}, IAppState> {
         console.log(this.leafletMapComponentRef);
         if (this.leafletMapComponentRef && this.leafletMapComponentRef.base) {
             this.leafletMapComponentRef.base.scrollIntoView({
-                behavior: "auto",
-                block: "start",
-                inline: "nearest",
+                behavior: 'smooth',
+                block: 'start',
+                inline: 'nearest',
             });
         }
     }
@@ -101,9 +101,9 @@ export default class App extends Component<{}, IAppState> {
     mapToSearchHandler() {
         if (this.searchPanelRef) {
             this.searchPanelRef.scrollIntoView({
-                behavior: "auto",
-                block: "start",
-                inline: "nearest",
+                behavior: 'smooth',
+                block: 'start',
+                inline: 'nearest',
             });
         }
     }
@@ -115,22 +115,23 @@ export default class App extends Component<{}, IAppState> {
     @autobind
     private selectPlaceInGeocodingEventHandler(item: IHereSearchResult) {
         const placeInfo = PlaceInfo.fromHereSearchResult(item);
-        const places = this.state.places.withMutations((list) => {
-            list.push(placeInfo);
-            for (const ind of list.keys()) {
-                if (ind === list.size - 1) {
-                    list.setIn([ind, 'selected'], true);
-                } else {
-                    list.setIn([ind, 'selected'], false);
+        this.setState((state: IAppState) => {
+            const places = state.places.withMutations((list) => {
+                list.push(placeInfo);
+                for (const ind of list.keys()) {
+                    if (ind === list.size - 1) {
+                        list.setIn([ind, 'selected'], true);
+                    } else {
+                        list.setIn([ind, 'selected'], false);
+                    }
                 }
+            });
+            return {
+                places,
             }
-        });
-        this.toggleMapMarker(places.find((p: PlaceInfo) => !!p.selected));
-        this.searchToMapHandler();
-        this.setState({
-            places,
         }, () => {
-            this.updateLocalStorageFromState();
+            this.toggleMapMarker(this.state.places.find((p: PlaceInfo) => !!p.selected));
+            this.searchToMapHandler();
         });
     }
 
@@ -143,19 +144,25 @@ export default class App extends Component<{}, IAppState> {
     }
 
     private selectPlaceInListEventHandler(indexOfSelectedToggle: number) {
-        const places = this.state.places.withMutations((list: List<PlaceInfo>) => {
-            for (const ind of list.keys()) {
-                if (indexOfSelectedToggle === ind) {
-                    list.setIn([ind, 'selected'], !list.getIn([ind, 'selected']));
-                    this.toggleMapMarker(list.get(ind));
-                    this.searchToMapHandler();
-                } else {
-                    list.setIn([ind, 'selected'], false);
+        this.setState((state: IAppState) => {
+            const places = state.places.withMutations((list: List<PlaceInfo>) => {
+                for (const ind of list.keys()) {
+                    if (indexOfSelectedToggle === ind) {
+                        list.setIn([ind, 'selected'], !list.getIn([ind, 'selected']));
+                    } else {
+                        list.setIn([ind, 'selected'], false);
+                    }
                 }
+            });
+            return {
+                places,
+            };
+        }, () => {
+            this.toggleMapMarker(this.state.places.get(indexOfSelectedToggle));
+            if (this.state.places.getIn([indexOfSelectedToggle, 'selected'])) {
+                // not move to map if item DESELECTED
+                this.searchToMapHandler();
             }
-        });
-        this.setState({
-            places,
         });
     }
 
