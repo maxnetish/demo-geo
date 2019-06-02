@@ -1,3 +1,19 @@
+/**
+ * Usage:
+ * <dg-expander open title-text="Title for details">
+ *     <div slot="title">
+ *         Custom title
+ *         <i class="custom icon"></i>
+ *     </div>
+ *     <ul slot="content">
+ *         <li>Expander content</li>
+ *     </ul>
+ * </dg-expander>
+ *
+ * Slot "title" overrides title-text, fires event "toggle" when close or open by user.
+ * You can manage component programmatically by property "open".
+ */
+
 import templateHtmlString from './expander-webcomponent.tpl.html';
 import {IWebComponent} from "../base";
 import {autobind} from "core-decorators";

@@ -90,6 +90,7 @@ header {
 }
 
 .dg-expander-light-component {
+    /* to traverse to expander webcomponent */
     --dg-expander-title-color: #333333;
 }
 

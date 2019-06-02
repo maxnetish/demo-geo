@@ -81,11 +81,6 @@ export default class App extends Component<{}, IAppState> {
     }
 
     @autobind
-    private toggleHandler(e: Event) {
-        console.log(e);
-    }
-
-    @autobind
     private selectProviderEventHandler({code}: { code: string }) {
         this.setState({provider: code});
     }
@@ -95,8 +90,8 @@ export default class App extends Component<{}, IAppState> {
         console.log(this.leafletMapComponentRef);
         if (this.leafletMapComponentRef && this.leafletMapComponentRef.base) {
             this.leafletMapComponentRef.base.scrollIntoView({
-                behavior: "smooth",
-                block: "end",
+                behavior: "auto",
+                block: "start",
                 inline: "nearest",
             });
         }
@@ -106,7 +101,7 @@ export default class App extends Component<{}, IAppState> {
     mapToSearchHandler() {
         if (this.searchPanelRef) {
             this.searchPanelRef.scrollIntoView({
-                behavior: "smooth",
+                behavior: "auto",
                 block: "start",
                 inline: "nearest",
             });
@@ -131,6 +126,7 @@ export default class App extends Component<{}, IAppState> {
             }
         });
         this.toggleMapMarker(places.find((p: PlaceInfo) => !!p.selected));
+        this.searchToMapHandler();
         this.setState({
             places,
         }, () => {
