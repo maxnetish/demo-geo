@@ -132,6 +132,7 @@ export default class App extends Component<{}, IAppState> {
         }, () => {
             this.toggleMapMarker(this.state.places.find((p: PlaceInfo) => !!p.selected));
             this.searchToMapHandler();
+            this.updateLocalStorageFromState();
         });
     }
 
