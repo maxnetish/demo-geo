@@ -87,7 +87,6 @@ export default class App extends Component<{}, IAppState> {
 
     @autobind
     searchToMapHandler() {
-        console.log(this.leafletMapComponentRef);
         if (this.leafletMapComponentRef && this.leafletMapComponentRef.base) {
             this.leafletMapComponentRef.base.scrollIntoView({
                 behavior: 'smooth',
