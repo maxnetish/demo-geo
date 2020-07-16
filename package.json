@@ -67,7 +67,7 @@
     "immutable": "^4.0.0-rc.12",
     "leaflet": "^1.5.1",
     "leaflet-providers": "^1.7.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "preact": "^8.4.2",
     "purecss": "^1.0.0"
   },
