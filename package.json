@@ -63,7 +63,7 @@
   "dependencies": {
     "classnames": "^2.2.6",
     "core-decorators": "^0.20.0",
-    "dompurify": "^2.0.8",
+    "dompurify": "^2.0.17",
     "immutable": "^4.0.0-rc.12",
     "leaflet": "^1.5.1",
     "leaflet-providers": "^1.7.0",
