@@ -1,6 +1,8 @@
 import {IPromiseWithAbortController} from "../utils/abortable-promise";
+import { HereAutocompleteRequest } from '../models/here-autocomplete-request';
+import { HereAutocompleteResponse } from '../models/here-autocomplete-response';
 
-export type HereResultType = 'areas' | 'houseNumber' | 'postalCode' | 'street' | 'intersection';
+// export type HereResultType = 'areas' | 'houseNumber' | 'postalCode' | 'street' | 'intersection';
 
 export interface IHereSuggestion {
     label?: string;
@@ -74,39 +76,6 @@ export class HereMapCircle implements ISerializeToQuery {
         }
         return this.center.query;
     }
-}
-
-export interface IHereSuggestionRequest {
-    query?: string;
-    /**
-     * Default 5. From 1 to 20.
-     */
-    maxresults?: number;
-    /**
-     * List of ISO3 country codes (FRA,BEL for example)
-     */
-    country?: string[];
-    /**
-     * rectangle to more relevant search in
-     */
-    mapview?: HereMapRectangle;
-    /**
-     * Circle to more relevant search in
-     */
-    prox?: HereMapCircle;
-    /**
-     * marker of beginning position to highlight
-     */
-    beginHighlight?: string;
-    /**
-     * marker of end position to highlight
-     */
-    endHighlight?: string;
-    /**
-     * Preferref language as 2-letter ISO code ("it" for example)
-     */
-    language?: string;
-    resultType?: HereResultType;
 }
 
 export interface IHereGeocodeRequest {
@@ -185,7 +154,6 @@ export class HereRequestAdditionalData implements ISerializeToQuery, Iterable<IH
     constructor(...pairs: IHereKeyValuePair[]) {
         this.list = pairs;
     }
-
 
     public get query(): string {
         return this.list
@@ -546,14 +514,14 @@ function parseJsonBody(res: Response): Promise<any> {
  *
  * @param request
  */
-export function fetchSuggestions(
-    request: IHereSuggestionRequest,
-): IPromiseWithAbortController<IHereSuggestion[]> {
+export function fetchAutocomplete(
+    request: HereAutocompleteRequest,
+): IPromiseWithAbortController<HereAutocompleteResponse> {
     const query = serializeToQuery(request);
     const abortController = new AbortController();
 
     return {
-        promise: fetch(`/autocomplete.geocoder.cit.api.here.com/6.2/suggest.json?${query}`, {
+        promise: fetch(`/autocomplete.search.hereapi.com/v1/autocomplete?${query}`, {
             cache: 'default',
             // credentials: 'same-origin',
             method: 'GET',
@@ -561,8 +529,7 @@ export function fetchSuggestions(
             signal: abortController.signal,
         })
             .then(generalFetchErrHandler)
-            .then(parseJsonBody)
-            .then((d) => d.suggestions),
+            .then(parseJsonBody),
         abortController,
     };
 }

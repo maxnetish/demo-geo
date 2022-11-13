@@ -7,19 +7,20 @@ import classNames from 'classnames';
 import './geocoding.less';
 
 import {
-    fetchSuggestions,
+    fetchAutocomplete,
     IHereSuggestion,
     fetchGeocodeDetails,
     IHereGeocodeResponse, IHereSearchResult,
 } from "../../services/here-resources";
 import AutocompleteComponent from '../autocomplete/autocomplete';
+import { HereAutocompleteResponse } from '../../models/here-autocomplete-response';
 
 interface IGeocodingAutocompleteProps {
     onSelectItem?: (selection: IHereSearchResult) => void;
 }
 
 interface IGeocodingAutocompleteState {
-    suggestions: IHereSuggestion[];
+    suggestions: HereAutocompleteResponse['items'];
     searchTerm?: string;
     suggestionsLoading: boolean;
     selectedSuggestion: IHereSuggestion | null;
@@ -46,13 +47,14 @@ export default class Geocoding extends Component<IGeocodingAutocompleteProps, IG
         });
     }
 
-    private static renderSuggestion(suggestion: IHereSuggestion) {
+    private static renderSuggestion(suggestion: HereAutocompleteResponse['items'][number]) {
         return <div class="dg-autocomplete-suggesttion">
             <div class="dg-autocomplete-suggesttion-match-level">
-                <i class={Geocoding.iconByMatchLevel(suggestion.matchLevel)}></i>
+                <i class={Geocoding.iconByMatchLevel(suggestion.resultType)}></i>
             </div>
-            <div class="dg-autocomplete-suggesttion-label"
-                 dangerouslySetInnerHTML={{__html: suggestion.label ? sanitize(suggestion.label) : ''}}/>
+            <div class="dg-autocomplete-suggesttion-label">
+                {suggestion.title}
+            </div>
         </div>;
     }
 
@@ -67,11 +69,9 @@ export default class Geocoding extends Component<IGeocodingAutocompleteProps, IG
             this.setState({
                 suggestionsLoading: true,
             });
-            const promiseWithAborter = fetchSuggestions({
-                maxresults: 10,
-                query: term,
-                beginHighlight: '<b>',
-                endHighlight: '</b>',
+            const promiseWithAborter = fetchAutocomplete({
+                limit: 10,
+                q: term,
             });
             this.fetchSuggestionsAbortController = promiseWithAborter.abortController;
 
@@ -79,7 +79,7 @@ export default class Geocoding extends Component<IGeocodingAutocompleteProps, IG
             // AbortController not needed anymore after request resolves
             this.fetchSuggestionsAbortController = null;
             this.setState({
-                suggestions,
+                suggestions: suggestions.items,
                 suggestionsLoading: false,
             });
             return true;

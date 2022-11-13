@@ -3,6 +3,7 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const autoprefixer = require('autoprefixer');
+const hereSecret = require('./.HERE-api-secret.json');
 
 const srcDir = 'src';
 const distDir = 'dist';
@@ -22,27 +23,47 @@ module.exports = {
         errorDetails: true,
         children: false,
         chunks: false,
-        assets: true
+        assets: true,
     },
     entry: {
-        'demo-geo': path.resolve(srcDir, 'bootstrap.tsx')
+        'demo-geo': path.resolve(srcDir, 'bootstrap.tsx'),
     },
     output: {
         path: path.resolve(distDir, wwwDir),
         filename: '[name]-[hash].js',
-        publicPath: ''
+        publicPath: '',
     },
     target: 'web',
     resolve: {
-        extensions: ['.js', '.ts', '.tsx']
+        extensions: ['.js', '.ts', '.tsx'],
+    },
+    devtool: 'eval-source-map',
+    devServer: {
+        contentBase: path.resolve(distDir, wwwDir),
+        port: 3000,
+        hot: true,
+        proxy: {
+            '/autocomplete.search.hereapi.com': {
+                target: 'https://autocomplete.search.hereapi.com',
+                // pathRewrite: {'^/autocomplete.search.hereapi.com' : ''},
+                pathRewrite: function (path, req) {
+                    const token = path.includes('?') ? '&' : '?';
+                    const rewrited = path.replace('/autocomplete.search.hereapi.com', '') + token + 'apiKey=' + hereSecret.apiKey;
+                    console.log(`REWRITE: ${path} -> ${rewrited}`);
+                    return rewrited;
+                },
+                secure: false,
+                verbose: true,
+            },
+        },
     },
     plugins: [
         new CleanWebpackPlugin([
             // clear dist/www
-            distDir
+            distDir,
         ], {
             verbose: true,
-            root: path.resolve()
+            root: path.resolve(),
         }),
         new HtmlWebpackPlugin({
             filename: 'index.html',
@@ -50,32 +71,32 @@ module.exports = {
             inject: true,
             minify: false,
             cache: true,
-            showErrors: true
+            showErrors: true,
         }),
         new MiniCssExtractPlugin({
             filename: "[name]-[hash].css",
-        })
+        }),
     ],
     module: {
         rules: [
             {
                 test: /\.tsx?$/,
                 exclude: /node_modules/,
-                loaders: ['ts-loader']
+                loaders: ['ts-loader'],
             },
             {
                 test: filesJs,
                 include: path.resolve(srcDir),
                 use: {
-                    loader: 'babel-loader'
-                }
+                    loader: 'babel-loader',
+                },
             },
             {
                 test: filesCss,
                 use: [
                     {
                         // to place css in css files
-                        loader: MiniCssExtractPlugin.loader
+                        loader: MiniCssExtractPlugin.loader,
                     },
                     'css-loader',
                     {
@@ -83,17 +104,17 @@ module.exports = {
                         options: {
                             sourceMap: false,
                             plugins: [
-                                autoprefixer()
-                            ]
-                        }
-                    }
-                ]
+                                autoprefixer(),
+                            ],
+                        },
+                    },
+                ],
             },
             {
                 test: filesLess,
                 use: [
                     {
-                        loader: MiniCssExtractPlugin.loader
+                        loader: MiniCssExtractPlugin.loader,
                     },
                     'css-loader',
                     // {
@@ -102,8 +123,8 @@ module.exports = {
                     //         sourceMap: false
                     //     }
                     // },
-                    'less-loader'
-                ]
+                    'less-loader',
+                ],
             },
             {
                 // fonts dependencies
@@ -114,10 +135,10 @@ module.exports = {
                         options: {
                             name: '[name].[ext]',
                             outputPath: 'fonts/',
-                            publicPath: 'fonts/'
-                        }
-                    }
-                ]
+                            publicPath: 'fonts/',
+                        },
+                    },
+                ],
             },
             {
                 // inject images as url
@@ -128,15 +149,15 @@ module.exports = {
                         options: {
                             name: '[name]-[hash].[ext]',
                             outputPath: 'images/',
-                            publicPath: 'images/'
-                        }
-                    }
-                ]
+                            publicPath: 'images/',
+                        },
+                    },
+                ],
             },
             {
                 test: /\.tpl.html$/,
-                use: 'raw-loader'
-            }
-        ]
-    }
+                use: 'raw-loader',
+            },
+        ],
+    },
 };
