@@ -9,23 +9,24 @@ import './geocoding.less';
 import {
     fetchAutocomplete,
     IHereSuggestion,
-    fetchGeocodeDetails,
+    fetchDetailsById,
     IHereGeocodeResponse, IHereSearchResult,
 } from "../../services/here-resources";
 import AutocompleteComponent from '../autocomplete/autocomplete';
 import { HereAutocompleteResponse } from '../../models/here-autocomplete-response';
+import { HereLookupResponse } from '../../models/here-lookup-response';
 
 interface IGeocodingAutocompleteProps {
-    onSelectItem?: (selection: IHereSearchResult) => void;
+    onSelectItem?: (selection: HereLookupResponse) => void;
 }
 
 interface IGeocodingAutocompleteState {
     suggestions: HereAutocompleteResponse['items'];
     searchTerm?: string;
     suggestionsLoading: boolean;
-    selectedSuggestion: IHereSuggestion | null;
+    selectedSuggestion: HereAutocompleteResponse['items'][number] | null;
     selectedPlaceLoading: boolean;
-    selectedPlace: IHereSearchResult | null;
+    selectedPlace: HereLookupResponse | null;
 }
 
 export default class Geocoding extends Component<IGeocodingAutocompleteProps, IGeocodingAutocompleteState> {
@@ -138,7 +139,7 @@ export default class Geocoding extends Component<IGeocodingAutocompleteProps, IG
             this.fetchPlaceAbortController.abort();
         }
         try {
-            const promiseWithAborter = fetchGeocodeDetails({locationid: locationId});
+            const promiseWithAborter = fetchDetailsById({id: locationId});
             this.fetchPlaceAbortController = promiseWithAborter.abortController;
             this.setState({
                 selectedPlaceLoading: true,
@@ -146,21 +147,13 @@ export default class Geocoding extends Component<IGeocodingAutocompleteProps, IG
             });
 
             const geocodeResponse = await promiseWithAborter.promise;
-            let selectedPlace = null;
             this.fetchPlaceAbortController = null;
-            if (geocodeResponse &&
-                geocodeResponse.View &&
-                geocodeResponse.View.length &&
-                geocodeResponse.View[0].Result &&
-                geocodeResponse.View[0].Result.length) {
-                selectedPlace = geocodeResponse.View[0].Result[0];
-            }
             this.setState({
-                selectedPlace,
+                selectedPlace: geocodeResponse || null,
                 selectedPlaceLoading: false,
             });
-            if (this.props.onSelectItem && selectedPlace) {
-                this.props.onSelectItem(selectedPlace);
+            if (this.props.onSelectItem && geocodeResponse) {
+                this.props.onSelectItem(geocodeResponse);
             }
             return true;
         } catch (err) {
@@ -176,12 +169,12 @@ export default class Geocoding extends Component<IGeocodingAutocompleteProps, IG
     }
 
     @autobind
-    private onSelectSuggestion(suggestion: IHereSuggestion) {
+    private onSelectSuggestion(suggestion: HereAutocompleteResponse['items'][number]) {
         this.setState({
             selectedSuggestion: suggestion,
         });
-        if (suggestion && suggestion.locationId) {
-            this.updateSelectedPlace(suggestion.locationId);
+        if (suggestion && suggestion.id) {
+            this.updateSelectedPlace(suggestion.id);
         }
     }
 

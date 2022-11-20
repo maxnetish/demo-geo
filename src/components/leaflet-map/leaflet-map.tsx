@@ -2,7 +2,7 @@ import {h, Component} from 'preact';
 
 import {Map, TileLayer, tileLayer, map, LatLngBounds, CircleMarker, circleMarker, LatLng, latLngBounds} from 'leaflet';
 import 'leaflet-providers';
-import {ICoords} from "../../models/coords";
+import {HereCoords} from "../../models/here-coords";
 import {Nullable} from "../../utils/nullable";
 
 interface ILeafletMapProps {
@@ -52,7 +52,7 @@ export default class LeafletMap extends Component<ILeafletMapProps, {}> {
         return <div id="dg-leaflet-map-place"></div>;
     }
 
-    public showPlace({bounds = null, location = null}: { bounds: Nullable<[ICoords, ICoords]>, location: Nullable<ICoords> }) {
+    public showPlace({bounds = null, location = null}: { bounds: Nullable<[HereCoords, HereCoords]>, location: Nullable<HereCoords> }) {
         if (!this.leafletMap) {
             return;
         }

@@ -10,6 +10,9 @@ import { HereAddress } from './here-address';
 import { HereHighlightRange } from './here-highlight-range';
 import { HereStreetInfo } from './here-street-info';
 
+/**
+ * https://developer.here.com/documentation/geocoding-search-api/api-reference-swagger.html
+ */
 export interface HereAutocompleteResponse {
     items: {
         title: string;

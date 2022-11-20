@@ -55,6 +55,17 @@ module.exports = {
                 secure: false,
                 verbose: true,
             },
+            '/lookup.search.hereapi.com': {
+                target: 'https://lookup.search.hereapi.com',
+                pathRewrite: function (path, req) {
+                    const token = path.includes('?') ? '&' : '?';
+                    const rewrited = path.replace('/lookup.search.hereapi.com', '') + token + 'apiKey=' + hereSecret.apiKey;
+                    console.log(`REWRITE: ${path} -> ${rewrited}`);
+                    return rewrited;
+                },
+                secure: false,
+                verbose: true,
+            },
         },
     },
     plugins: [

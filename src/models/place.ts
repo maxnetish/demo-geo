@@ -2,13 +2,15 @@ import {latLng, LatLng, latLngBounds, LatLngBounds} from "leaflet";
 import {HereLocationType, IHereGeoBoundingBox, IHereGeoCoordinate, IHereSearchResult} from "../services/here-resources";
 import {Nullable} from "../utils/nullable";
 import {Record} from 'immutable';
-import {ICoords} from "./coords";
+import {HereCoords} from "./here-coords";
+import { HereLookupResponse } from './here-lookup-response';
+import { HereResultType } from './here-result-type';
 
 export interface IPlaceInfo {
     locationId: string;
     placeType: HereLocationType;
-    bounds: Nullable<[ICoords, ICoords]>;
-    location: Nullable<ICoords>;
+    bounds: Nullable<[HereCoords, HereCoords]>;
+    location: Nullable<HereCoords>;
     title: Nullable<string>;
     description: Nullable<string>;
     selected?: boolean;
@@ -27,36 +29,36 @@ const PlaceInfoRecord = Record<IPlaceInfo>({
 }, 'Geo place information');
 
 export class PlaceInfo extends PlaceInfoRecord implements Readonly<IPlaceInfo> {
-    toJSON(): IPlaceInfo {
+
+    public static fromHereSearchResult(hereResult: HereLookupResponse): PlaceInfo {
+        return new PlaceInfo({
+            placeType: 'point',
+            locationId: hereResult.id,
+            location: hereResult.position ?
+                {
+                    lat: hereResult.position.lat,
+                    lng: hereResult.position.lng,
+                } :
+                null,
+            bounds: hereResult.mapView ? [
+                {
+                    lat: hereResult.mapView.north,
+                    lng: hereResult.mapView.west,
+                },
+                {
+                    lat: hereResult.mapView.south,
+                    lng: hereResult.mapView.east,
+                },
+            ] : null,
+            description: (hereResult.address && hereResult.address.label) || null,
+            selected: false,
+            title: hereResult.title || null,
+        });
+    }
+    public toJSON(): IPlaceInfo {
         const result = super.toJSON();
         delete result.selected;
         return result;
-    }
-
-    public static fromHereSearchResult(hereResult: IHereSearchResult): PlaceInfo {
-        return new PlaceInfo({
-            placeType: hereResult.Location.LocationType || 'point',
-            locationId: hereResult.Location.LocationId,
-            location: hereResult.Location.DisplayPosition ?
-                {
-                    lat: hereResult.Location.DisplayPosition.Latitude,
-                    lng: hereResult.Location.DisplayPosition.Longitude,
-                } :
-                null,
-            bounds: hereResult.Location.MapView ? [
-                {
-                    lat: hereResult.Location.MapView.TopLeft.Latitude,
-                    lng: hereResult.Location.MapView.TopLeft.Longitude
-                },
-                {
-                    lat: hereResult.Location.MapView.BottomRight.Latitude,
-                    lng: hereResult.Location.MapView.BottomRight.Longitude,
-                }
-            ] : null,
-            description: (hereResult.Location.Address && hereResult.Location.Address.Label) || null,
-            selected: false,
-            title: hereResult.Location.Name || null,
-        });
     }
 }
 

@@ -1,12 +1,12 @@
-import {Component, h, Ref} from 'preact';
-import {List} from 'immutable';
+import { Component, h, Ref } from 'preact';
+import { List } from 'immutable';
 
 import LeafletMap from './components/leaflet-map/leaflet-map';
 import SelectTileProvider from './components/select-tile-provider/select-tile-provider';
 import Geocoding from './components/geocoding/geocoding';
 
-import {autobind} from 'core-decorators';
-import {IHereSearchResult} from "./services/here-resources";
+import { autobind } from 'core-decorators';
+import { IHereSearchResult } from "./services/here-resources";
 import {
     IPlaceInfo,
     PlaceInfo,
@@ -14,6 +14,7 @@ import {
 import PlaceInfoComponent from "./components/place-info/place-info";
 
 import './webcomponents/expander-webcomponent/expander-webcomponent';
+import { HereLookupResponse } from './models/here-lookup-response';
 
 interface IAppState {
     provider: string;
@@ -112,7 +113,7 @@ export default class App extends Component<{}, IAppState> {
      * @param item
      */
     @autobind
-    private selectPlaceInGeocodingEventHandler(item: IHereSearchResult) {
+    private selectPlaceInGeocodingEventHandler(item: HereLookupResponse) {
         const placeInfo = PlaceInfo.fromHereSearchResult(item);
         this.setState((state: IAppState) => {
             const places = state.places.withMutations((list) => {
@@ -127,7 +128,7 @@ export default class App extends Component<{}, IAppState> {
             });
             return {
                 places,
-            }
+            };
         }, () => {
             this.toggleMapMarker(this.state.places.find((p: PlaceInfo) => !!p.selected));
             this.searchToMapHandler();

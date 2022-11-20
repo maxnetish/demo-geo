@@ -1,6 +1,8 @@
 import {IPromiseWithAbortController} from "../utils/abortable-promise";
 import { HereAutocompleteRequest } from '../models/here-autocomplete-request';
 import { HereAutocompleteResponse } from '../models/here-autocomplete-response';
+import { HereLookupRequest } from '../models/here-lookup-request';
+import { HereLookupResponse } from '../models/here-lookup-response';
 
 // export type HereResultType = 'areas' | 'houseNumber' | 'postalCode' | 'street' | 'intersection';
 
@@ -534,18 +536,17 @@ export function fetchAutocomplete(
     };
 }
 
-export function fetchGeocodeDetails(request: IHereGeocodeRequest): IPromiseWithAbortController<IHereGeocodeResponse> {
+export function fetchDetailsById(request: HereLookupRequest): IPromiseWithAbortController<HereLookupResponse> {
     const query = serializeToQuery(request);
     const abortController = new AbortController();
     return {
-        promise: fetch(`/geocoder.cit.api.here.com/6.2/geocode.json?${query}`, {
+        promise: fetch(`/lookup.search.hereapi.com/v1/lookup?${query}`, {
             cache: "default",
             method: 'GET',
             signal: abortController.signal,
         })
             .then(generalFetchErrHandler)
-            .then(parseJsonBody)
-            .then((d) => d.Response),
+            .then(parseJsonBody),
         abortController,
     };
 }
